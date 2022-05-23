@@ -3,6 +3,18 @@ const bcrypt = require('bcryptjs');
 const router = express.Router();
 const User = require('../model/user');
 const jwtUtils = require('../config/JwtUtils');
+const { authenticationMiddleware } = require('../config/JwtUtils');
+const expiration = jwtUtils.JWT_TIMEOUT;
+
+/**
+ * Allows for a JWT to be refreshed if you are currently hold a valid JWT.
+ */
+router.post('/refresh', authenticationMiddleware, async (request, response, next) => {
+    const user = request.user;
+    const token = jwtUtils.generateAccessToken(user.username, user.role);
+    response.setHeader('Authorization', token);
+    return response.status(200).json({ token, expiration, user });
+});
 
 /** 
 * This route creates a new user from the passed in request body or returns an appropriate error.
@@ -45,11 +57,11 @@ router.post('/login', async (request, response, next) => {
 
         if (user) {
             if (await bcrypt.compare(password, user.password)) {
+                user.password = undefined;
                 const token = jwtUtils.generateAccessToken(user.username, user.role);
                 response.setHeader('Authorization', token);
-                user.password = undefined;
 
-                return response.status(200).json(user);
+                return response.status(200).json({ token, expiration, user });
             }
         }
         return response.status(400).send("Invalid login details.");

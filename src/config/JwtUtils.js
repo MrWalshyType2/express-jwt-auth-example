@@ -5,16 +5,17 @@ const jwt = require('jsonwebtoken');
 dotenv.config();
 
 const SECRET = process.env.TOKEN_SECRET;
+const JWT_TIMEOUT = (60 * 30); // 60 seconds * 30
 
 /** 
 * Returns a signed Json Web Token (JWT) token for the given unique identifier, a username in an object. This token will be valid for
-* up to 24 hours. 
+* up to 30 minutes. 
 *
 * @param {object} username - A username to be hashed in the token.
 * @return {string} A base64 string representing the signed JWT.
 */
 function generateAccessToken(username, role) {
-    return jwt.sign({ username, role }, SECRET, { expiresIn: "1d" })
+    return jwt.sign({ username, role }, SECRET, { expiresIn: JWT_TIMEOUT });
 }
 
 /**
@@ -53,5 +54,6 @@ function isAdmin(request, response, next) {
 module.exports = {
     generateAccessToken,
     authenticationMiddleware,
-    isAdmin
+    isAdmin,
+    JWT_TIMEOUT
 }
