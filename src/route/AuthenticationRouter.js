@@ -4,6 +4,9 @@ const router = express.Router();
 const User = require('../model/user');
 const jwtUtils = require('../config/JwtUtils');
 
+/** 
+* This route creates a new user from the passed in request body or returns an appropriate error.
+*/
 router.post('/register', async (request, response, next) => {
     try {
         const user = new User({ ...request.body });
@@ -27,6 +30,10 @@ router.post('/register', async (request, response, next) => {
     }
 });
 
+/**
+ * This route is used to login to the API, provided valid credentials a Json Web Token (JWT) will
+ * be provided for future interactions with the API.
+ */
 router.post('/login', async (request, response, next) => {
     try {
         const { username, password } = request.body;
@@ -35,6 +42,7 @@ router.post('/login', async (request, response, next) => {
             return response.status(400).send("Incomplete login fields.");
         }
 
+        // ensure to select the pw from the db for the comparison
         const user = await User.findOne({ username }).select('+password');
 
         if (user) {

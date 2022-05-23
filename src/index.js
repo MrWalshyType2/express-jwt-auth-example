@@ -15,6 +15,9 @@ app.use(express.static("public"));
 app.use(authenticationRouter);
 app.use('/example', exampleRouter);
 
+/** 
+* This is the entry point to the API, this will start the database and the server when called.
+*/
 async function main() {
     await database.connect();
 

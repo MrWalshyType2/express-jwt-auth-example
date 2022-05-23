@@ -17,6 +17,10 @@ function generateAccessToken(username) {
     return jwt.sign({ username }, SECRET, { expiresIn: "1d" })
 }
 
+/**
+ * Add this function to the Express middleware stack, or to the middleware stack of a route, to apply
+ * JWT authentication middleware.
+ */
 function authenticationMiddleware(request, response, next) {
     const authHeader = request.header('authorization');
     const token = authHeader && authHeader.split(' ')[1];

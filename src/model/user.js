@@ -15,7 +15,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
         minlength: 6,
-        select: false
+        select: false // prevent password from being returned in every request from db
     },
     email: {
         type: String,
