@@ -13,8 +13,8 @@ const SECRET = process.env.TOKEN_SECRET;
 * @param {object} username - A username to be hashed in the token.
 * @return {string} A base64 string representing the signed JWT.
 */
-function generateAccessToken(username) {
-    return jwt.sign({ username }, SECRET, { expiresIn: "1d" })
+function generateAccessToken(username, role) {
+    return jwt.sign({ username, role }, SECRET, { expiresIn: "1d" })
 }
 
 /**
@@ -35,12 +35,23 @@ function authenticationMiddleware(request, response, next) {
             return response.status(403).send('Invalid token supplied.');
         }
         request.user = user;
+        console.log(`User ${user.username} was authorized successfully.`);
         next();
     });
+}
+
+function isAdmin(request, response, next) {
+    if (request.user.role === 'ADMIN') {
+        console.log(`Admin access granted to: ${request.user.username}`);
+        return next();
+    }
+    console.log(`Admin access denied to: ${request.user.username}`);
+    return response.status(403).send('Invalid token supplied.');
 }
 
 
 module.exports = {
     generateAccessToken,
-    authenticationMiddleware
+    authenticationMiddleware,
+    isAdmin
 }

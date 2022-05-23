@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const bcrypt = require('bcryptjs');
 
 const userSchema = new Schema({
     username: {
@@ -29,7 +30,23 @@ const userSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now()
+    },
+    role: {
+        type: String,
+        enum: ['ADMIN', 'MEMBER'],
+        default: 'MEMBER'
     }
+});
+
+// document middleware, hooking into the middleware for save operations on documents
+userSchema.pre('save', async function(next) {
+    // hash+salt the currently set password if it is new or has been modified
+    if (this.password && this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 8);
+    }
+
+    // must be called to advance Mongooses middleware chain
+    next();
 });
 
 const User = mongoose.model('User', userSchema);

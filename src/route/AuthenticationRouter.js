@@ -20,8 +20,6 @@ router.post('/register', async (request, response, next) => {
             return response.status(409).send("User already exists!");
         }
 
-        const encryptedPassword = await bcrypt.hash(user.password, 8);
-        user.password = encryptedPassword;
         await user.save();
 
         return response.status(201).json(`User ${user.username} created successfully, please log in.`);
@@ -47,7 +45,7 @@ router.post('/login', async (request, response, next) => {
 
         if (user) {
             if (await bcrypt.compare(password, user.password)) {
-                const token = jwtUtils.generateAccessToken(user.username);
+                const token = jwtUtils.generateAccessToken(user.username, user.role);
                 response.setHeader('Authorization', token);
                 user.password = undefined;
 
