@@ -24,23 +24,36 @@ function generateAccessToken(username, role) {
  */
 function authenticationMiddleware(request, response, next) {
     const authHeader = request.header('authorization');
+    // tokens are sent in the form: Authorization: Bearer jr9480rhj48787yth84yh387thy48t7yh4
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
         return response.status(401).send('A token is required for authentication.');
     }
     
+    // the SECRET is used to verify that the token has NOT changed
+    // - user is extracted from the JWT
     jwt.verify(token, SECRET, (error, user) => {
         if (error) {
             console.error(error);
             return response.status(403).send('Invalid token supplied.');
         }
+        // attach the user to the request object
         request.user = user;
         console.log(`User ${user.username} was authorized successfully.`);
+        // pass control to the next piece of middleware
         next();
     });
 }
 
+/**
+ * This middleware checks if the user is an admin, this should be called after authenticationMiddleware
+ * in the middleware chain.
+ * @param {*} request 
+ * @param {*} response 
+ * @param {*} next 
+ * @returns 
+ */
 function isAdmin(request, response, next) {
     if (request.user.role === 'ADMIN') {
         console.log(`Admin access granted to: ${request.user.username}`);
