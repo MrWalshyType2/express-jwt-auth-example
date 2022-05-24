@@ -7,14 +7,10 @@ const { authenticationMiddleware } = require('../config/JwtUtils');
 const expiration = jwtUtils.JWT_TIMEOUT;
 
 /**
- * Allows for a JWT to be refreshed if you are currently hold a valid JWT.
+ * Allows for a JWT to be refreshed if you are currently hold a valid JWT and 
+ * a refresh token cookie.
  */
-router.post('/refresh', authenticationMiddleware, async (request, response, next) => {
-    const user = request.user;
-    const token = jwtUtils.generateAccessToken(user.username, user.role);
-    response.setHeader('Authorization', token);
-    return response.status(200).json({ token, expiration, user });
-});
+router.post('/refresh', authenticationMiddleware, jwtUtils.refreshAccessTokenMiddleware);
 
 /** 
 * This route creates a new user from the passed in request body or returns an appropriate error.
@@ -59,7 +55,15 @@ router.post('/login', async (request, response, next) => {
             if (await bcrypt.compare(password, user.password)) {
                 user.password = undefined;
                 const token = jwtUtils.generateAccessToken(user.username, user.role);
-                response.setHeader('Authorization', token);
+                // add refresh token cookie
+                response.cookie('refreshToken', jwtUtils.generateRefreshToken(user.username, user.role), {
+                    httpOnly: true, // forbid js from accessing the cookie
+                    sameSite: 'None', // allow sending cookie to cross-site and same-site requests
+                    secure: false, // requires a secure context (true) when same-site = None, set to false for development as otherwise cookies only sent via HTTPS, not HTTP
+                    domain: 'localhost', // domain for which the cookie can be sent
+                    path: '/', // valid base path, matches all subroutes
+                    maxAge: 1000 * 60 * 60 * 24 // max age of 24 hours
+                });
 
                 return response.status(200).json({ token, expiration, user });
             }
